@@ -1,26 +1,26 @@
 <h2>Mensageiro</h2>
 
-<button onclick="logout()">Sair</button>
-
 <hr>
 
 <h3>Criar Template</h3>
+
 <input id="title" placeholder="Título">
 <input id="subject" placeholder="Assunto">
 <br><br>
-<textarea id="body" placeholder="Corpo do email (use {{nome}} se quiser)"></textarea>
+<textarea id="body" placeholder="Corpo do email (ex: Olá {{nome}})"></textarea>
 <br>
+
 <button onclick="createTemplate()">Salvar template</button>
+<button onclick="loadTemplates()">Atualizar templates</button>
 
 <hr>
 
 <h3>Meus templates</h3>
-<button onclick="loadTemplates()">Atualizar lista</button>
 <ul id="templatesList"></ul>
 
 <hr>
 
-<h3>Enviar e-mail (registrado)</h3>
+<h3>Enviar e-mail</h3>
 
 <label>Template:</label>
 <select id="templateSelect"></select>
@@ -45,6 +45,12 @@
 <button onclick="loadEmails()">Atualizar histórico</button>
 <ul id="emailsList"></ul>
 
+<hr>
+
+<h3>Caixa de entrada (recebidos)</h3>
+<button onclick="loadInbox()">Atualizar caixa de entrada</button>
+<ul id="inboxList"></ul>
+
 <script>
 const token = localStorage.getItem("token");
 
@@ -59,13 +65,14 @@ function authHeaders(){
   };
 }
 
-function logout(){
-  localStorage.removeItem("token");
-  window.location = "/";
+function getUserIdFromToken(){
+  // pega o payload do JWT e lê o "sub"
+  const payload = JSON.parse(atob(token.split('.')[1]));
+  return parseInt(payload.sub);
 }
 
-async function createTemplate(){
-  const res = await fetch("/templates", {
+function createTemplate(){
+  fetch("/templates", {
     method:"POST",
     headers: authHeaders(),
     body: JSON.stringify({
@@ -73,42 +80,27 @@ async function createTemplate(){
       subject: subject.value,
       body: body.value
     })
+  })
+  .then(res => res.json().then(data => ({ ok: res.ok, data })))
+  .then(({ ok, data }) => {
+    if(ok){
+      alert("Template criado com sucesso!");
+
+      // limpa campos
+      title.value = "";
+      subject.value = "";
+      body.value = "";
+
+      loadTemplates();
+    }else{
+      alert(data.msg || "Erro ao criar template");
+    }
   });
-
-  const data = await res.json();
-
-  if(!res.ok){
-    alert(data.msg || "Erro ao salvar template");
-    return;
-  }
-
-  // limpa campos (o que você pediu)
-  title.value = "";
-  subject.value = "";
-  body.value = "";
-
-  alert("Template criado!");
-  await loadTemplates();
 }
 
-async function loadTemplates(){
-  const res = await fetch("/templates", { headers: authHeaders() });
-  const data = await res.json();
-
-  if(!res.ok){
-    alert(data.msg || "Erro ao listar templates");
-    return;
-  }
-
-  // lista na tela
-  templatesList.innerHTML = "";
+function fillTemplateSelect(templates){
   templateSelect.innerHTML = "";
-
-  data.forEach(t => {
-    const li = document.createElement("li");
-    li.textContent = `#${t.id} - ${t.title} (${t.subject})`;
-    templatesList.appendChild(li);
-
+  templates.forEach(t => {
     const opt = document.createElement("option");
     opt.value = t.id;
     opt.textContent = `#${t.id} - ${t.title}`;
@@ -116,68 +108,134 @@ async function loadTemplates(){
   });
 }
 
-async function loadUsers(){
-  const res = await fetch("/users", { headers: authHeaders() });
-  const data = await res.json();
+function loadTemplates(){
+  fetch("/templates", { headers: authHeaders() })
+    .then(res => res.json().then(data => ({ ok: res.ok, data })))
+    .then(({ ok, data }) => {
+      if(!ok){
+        alert(data.msg || "Erro ao listar templates");
+        return;
+      }
 
-  if(!res.ok){
-    alert(data.msg || "Erro ao listar usuários");
+      templatesList.innerHTML = "";
+
+      data.forEach(t => {
+        const li = document.createElement("li");
+        li.textContent = `#${t.id} - ${t.title} | ${t.subject}`;
+        templatesList.appendChild(li);
+      });
+
+      fillTemplateSelect(data);
+    });
+}
+
+function loadUsers(){
+  fetch("/users", { headers: authHeaders() })
+    .then(res => res.json().then(data => ({ ok: res.ok, data })))
+    .then(({ ok, data }) => {
+      if(!ok){
+        alert(data.msg || "Erro ao listar usuários");
+        return;
+      }
+
+      userSelect.innerHTML = "";
+      data.forEach(u => {
+        const opt = document.createElement("option");
+        opt.value = u.id;
+        opt.textContent = `${u.email} (id ${u.id})`;
+        userSelect.appendChild(opt);
+      });
+    });
+}
+
+function sendEmail(){
+  if(!templateSelect.value){
+    alert("Crie ou selecione um template primeiro.");
+    return;
+  }
+  if(!userSelect.value){
+    alert("Cadastre outro usuário para enviar.");
     return;
   }
 
-  userSelect.innerHTML = "";
-  data.forEach(u => {
-    const opt = document.createElement("option");
-    opt.value = u.id;
-    opt.textContent = `${u.email} (id ${u.id})`;
-    userSelect.appendChild(opt);
-  });
-}
-
-async function sendEmail(){
-  const res = await fetch("/send-email", {
-    method:"POST",
+  fetch("/send-email", {
+    method: "POST",
     headers: authHeaders(),
     body: JSON.stringify({
       template_id: Number(templateSelect.value),
       receiver_id: Number(userSelect.value),
       nome: nomeVar.value
     })
+  })
+  .then(res => res.json().then(data => ({ ok: res.ok, data })))
+  .then(({ ok, data }) => {
+    if(ok){
+      alert("Enviado (registrado no sistema)!");
+      nomeVar.value = "";
+
+      loadEmails();
+      loadInbox(); // atualiza a caixa de entrada também
+    }else{
+      alert(data.msg || "Erro ao enviar");
+    }
   });
-
-  const data = await res.json();
-
-  if(!res.ok){
-    alert(data.msg || "Erro ao enviar");
-    return;
-  }
-
-  // limpa campo do nome
-  nomeVar.value = "";
-
-  alert("Enviado (registrado no banco)!");
-  await loadEmails();
 }
 
-async function loadEmails(){
-  const res = await fetch("/emails", { headers: authHeaders() });
-  const data = await res.json();
+function loadEmails(){
+  fetch("/emails", { headers: authHeaders() })
+    .then(res => res.json().then(data => ({ ok: res.ok, data })))
+    .then(({ ok, data }) => {
+      if(!ok){
+        alert(data.msg || "Erro ao carregar histórico");
+        return;
+      }
 
-  if(!res.ok){
-    alert(data.msg || "Erro ao carregar histórico");
-    return;
-  }
+      emailsList.innerHTML = "";
 
-  emailsList.innerHTML = "";
-  data.forEach(e => {
-    const li = document.createElement("li");
-    li.textContent = `#${e.id} | de ${e.sender_id} para ${e.receiver_id} | ${e.subject} | ${e.created_at}`;
-    emailsList.appendChild(li);
-  });
+      data.forEach(e => {
+        const li = document.createElement("li");
+        li.textContent = `#${e.id} | de ${e.sender_id} para ${e.receiver_id} | ${e.subject} | ${e.created_at}`;
+        emailsList.appendChild(li);
+      });
+    });
+}
+
+function loadInbox(){
+  const myId = getUserIdFromToken();
+
+  fetch("/emails", { headers: authHeaders() })
+    .then(res => res.json().then(data => ({ ok: res.ok, data })))
+    .then(({ ok, data }) => {
+      if(!ok){
+        alert(data.msg || "Erro ao carregar caixa de entrada");
+        return;
+      }
+
+      inboxList.innerHTML = "";
+
+      data.forEach(e => {
+        // somente recebidos por mim
+        if(e.receiver_id == myId){
+          const li = document.createElement("li");
+
+          li.innerHTML =
+            "<b>Assunto:</b> " + e.subject +
+            "<br><b>Mensagem:</b> " + e.body +
+            "<br><small>Recebido em: " + e.created_at + "</small>";
+
+          inboxList.appendChild(li);
+        }
+      });
+
+      if(inboxList.innerHTML.trim() === ""){
+        inboxList.innerHTML = "<li>Nenhum e-mail recebido ainda.</li>";
+      }
+    });
 }
 
 // carrega tudo ao abrir
 loadUsers();
 loadTemplates();
 loadEmails();
+loadInbox();
 </script>
