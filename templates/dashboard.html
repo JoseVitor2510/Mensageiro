@@ -1,0 +1,24 @@
+<h2>Criar Template</h2>
+
+<input id="title" placeholder="Título">
+<input id="subject" placeholder="Assunto">
+<textarea id="body" placeholder="Corpo do email"></textarea>
+
+<button onclick="createTemplate()">Salvar</button>
+
+<script>
+function createTemplate(){
+    fetch("/templates", {
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json",
+            "Authorization":"Bearer " + localStorage.getItem("token")
+        },
+        body:JSON.stringify({
+            title:title.value,
+            subject:subject.value,
+            body:body.value
+        })
+    })
+}
+</script>

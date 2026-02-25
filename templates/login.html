@@ -1,0 +1,46 @@
+<h2>Login</h2>
+
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Senha">
+
+<br><br>
+
+<button onclick="login()">Entrar</button>
+<button onclick="register()">Cadastrar</button>
+
+<script>
+function login(){
+    fetch("/login", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+            email:email.value,
+            password:password.value
+        })
+    })
+    .then(res=>res.json())
+    .then(data=>{
+        if(data.access_token){
+            localStorage.setItem("token", data.access_token)
+            window.location="/dashboard"
+        }else{
+            alert("Erro no login")
+        }
+    })
+}
+
+function register(){
+    fetch("/register", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+            email:email.value,
+            password:password.value
+        })
+    })
+    .then(res=>res.json())
+    .then(data=>{
+        alert("Usuário criado com sucesso!")
+    })
+}
+</script>
