@@ -1,24 +1,183 @@
-<h2>Criar Template</h2>
+<h2>Mensageiro</h2>
 
+<button onclick="logout()">Sair</button>
+
+<hr>
+
+<h3>Criar Template</h3>
 <input id="title" placeholder="Título">
 <input id="subject" placeholder="Assunto">
-<textarea id="body" placeholder="Corpo do email"></textarea>
+<br><br>
+<textarea id="body" placeholder="Corpo do email (use {{nome}} se quiser)"></textarea>
+<br>
+<button onclick="createTemplate()">Salvar template</button>
 
-<button onclick="createTemplate()">Salvar</button>
+<hr>
+
+<h3>Meus templates</h3>
+<button onclick="loadTemplates()">Atualizar lista</button>
+<ul id="templatesList"></ul>
+
+<hr>
+
+<h3>Enviar e-mail (registrado)</h3>
+
+<label>Template:</label>
+<select id="templateSelect"></select>
+
+<br><br>
+
+<label>Para (usuário):</label>
+<select id="userSelect"></select>
+
+<br><br>
+
+<label>Nome (para {{nome}}):</label>
+<input id="nomeVar" placeholder="Ex: Carlos">
+
+<br><br>
+
+<button onclick="sendEmail()">Enviar</button>
+
+<hr>
+
+<h3>Histórico (enviados/recebidos)</h3>
+<button onclick="loadEmails()">Atualizar histórico</button>
+<ul id="emailsList"></ul>
 
 <script>
-function createTemplate(){
-    fetch("/templates", {
-        method:"POST",
-        headers:{
-            "Content-Type":"application/json",
-            "Authorization":"Bearer " + localStorage.getItem("token")
-        },
-        body:JSON.stringify({
-            title:title.value,
-            subject:subject.value,
-            body:body.value
-        })
-    })
+const token = localStorage.getItem("token");
+
+if(!token){
+  window.location = "/";
 }
+
+function authHeaders(){
+  return {
+    "Content-Type":"application/json",
+    "Authorization":"Bearer " + token
+  };
+}
+
+function logout(){
+  localStorage.removeItem("token");
+  window.location = "/";
+}
+
+async function createTemplate(){
+  const res = await fetch("/templates", {
+    method:"POST",
+    headers: authHeaders(),
+    body: JSON.stringify({
+      title: title.value,
+      subject: subject.value,
+      body: body.value
+    })
+  });
+
+  const data = await res.json();
+
+  if(!res.ok){
+    alert(data.msg || "Erro ao salvar template");
+    return;
+  }
+
+  // limpa campos (o que você pediu)
+  title.value = "";
+  subject.value = "";
+  body.value = "";
+
+  alert("Template criado!");
+  await loadTemplates();
+}
+
+async function loadTemplates(){
+  const res = await fetch("/templates", { headers: authHeaders() });
+  const data = await res.json();
+
+  if(!res.ok){
+    alert(data.msg || "Erro ao listar templates");
+    return;
+  }
+
+  // lista na tela
+  templatesList.innerHTML = "";
+  templateSelect.innerHTML = "";
+
+  data.forEach(t => {
+    const li = document.createElement("li");
+    li.textContent = `#${t.id} - ${t.title} (${t.subject})`;
+    templatesList.appendChild(li);
+
+    const opt = document.createElement("option");
+    opt.value = t.id;
+    opt.textContent = `#${t.id} - ${t.title}`;
+    templateSelect.appendChild(opt);
+  });
+}
+
+async function loadUsers(){
+  const res = await fetch("/users", { headers: authHeaders() });
+  const data = await res.json();
+
+  if(!res.ok){
+    alert(data.msg || "Erro ao listar usuários");
+    return;
+  }
+
+  userSelect.innerHTML = "";
+  data.forEach(u => {
+    const opt = document.createElement("option");
+    opt.value = u.id;
+    opt.textContent = `${u.email} (id ${u.id})`;
+    userSelect.appendChild(opt);
+  });
+}
+
+async function sendEmail(){
+  const res = await fetch("/send-email", {
+    method:"POST",
+    headers: authHeaders(),
+    body: JSON.stringify({
+      template_id: Number(templateSelect.value),
+      receiver_id: Number(userSelect.value),
+      nome: nomeVar.value
+    })
+  });
+
+  const data = await res.json();
+
+  if(!res.ok){
+    alert(data.msg || "Erro ao enviar");
+    return;
+  }
+
+  // limpa campo do nome
+  nomeVar.value = "";
+
+  alert("Enviado (registrado no banco)!");
+  await loadEmails();
+}
+
+async function loadEmails(){
+  const res = await fetch("/emails", { headers: authHeaders() });
+  const data = await res.json();
+
+  if(!res.ok){
+    alert(data.msg || "Erro ao carregar histórico");
+    return;
+  }
+
+  emailsList.innerHTML = "";
+  data.forEach(e => {
+    const li = document.createElement("li");
+    li.textContent = `#${e.id} | de ${e.sender_id} para ${e.receiver_id} | ${e.subject} | ${e.created_at}`;
+    emailsList.appendChild(li);
+  });
+}
+
+// carrega tudo ao abrir
+loadUsers();
+loadTemplates();
+loadEmails();
 </script>
