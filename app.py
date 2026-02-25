@@ -66,7 +66,7 @@ def login():
     if not user or not bcrypt.check_password_hash(user.password, data["password"]):
         return jsonify({"msg": "Credenciais inválidas"}), 401
     
-    token = create_access_token(identity=user.id)
+    token = create_access_token(identity=str(user.id))
     return jsonify(access_token=token)
 
 @app.route("/dashboard")
@@ -76,7 +76,7 @@ def dashboard():
 @app.route("/users", methods=["GET"])
 @jwt_required()
 def list_users():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     users = User.query.filter(User.id != user_id).all()
     return jsonify([{"id": u.id, "email": u.email} for u in users])
 
@@ -84,7 +84,7 @@ def list_users():
 @app.route("/templates", methods=["POST"])
 @jwt_required()
 def create_template():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     data = request.json
     
     template = Template(
@@ -102,7 +102,7 @@ def create_template():
 @app.route("/templates", methods=["GET"])
 @jwt_required()
 def list_templates():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
 
     templates = Template.query.filter_by(created_by=user_id).all()
 
@@ -119,7 +119,7 @@ def list_templates():
 @app.route("/send-email", methods=["POST"])
 @jwt_required()
 def send_email():
-    sender_id = get_jwt_identity()
+    sender_id = int(get_jwt_identity())
     data = request.json
 
     template = Template.query.get(data["template_id"])
@@ -149,7 +149,7 @@ def send_email():
 @app.route("/emails", methods=["GET"])
 @jwt_required()
 def list_emails():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
 
     emails = EmailSent.query.filter(
         (EmailSent.sender_id == user_id) |
