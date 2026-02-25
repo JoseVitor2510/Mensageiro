@@ -18,13 +18,18 @@ function login(){
             password:password.value
         })
     })
-    .then(res=>res.json())
-    .then(data=>{
-        if(data.access_token){
+    .then(res => res.json().then(data => ({ ok: res.ok, data })))
+    .then(({ ok, data }) => {
+        if(ok && data.access_token){
             localStorage.setItem("token", data.access_token)
+
+            // limpa campos
+            email.value = ""
+            password.value = ""
+
             window.location="/dashboard"
         }else{
-            alert("Erro no login")
+            alert(data.msg || "Erro no login")
         }
     })
 }
@@ -38,9 +43,17 @@ function register(){
             password:password.value
         })
     })
-    .then(res=>res.json())
-    .then(data=>{
-        alert("Usuário criado com sucesso!")
+    .then(res => res.json().then(data => ({ ok: res.ok, data })))
+    .then(({ ok, data }) => {
+        if(ok){
+            alert("Usuário criado com sucesso!")
+
+            // limpa campos
+            email.value = ""
+            password.value = ""
+        }else{
+            alert(data.msg || "Erro ao cadastrar")
+        }
     })
 }
 </script>
