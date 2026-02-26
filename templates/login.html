@@ -1,12 +1,157 @@
-<h2>Login</h2>
+﻿<style>
+  :root {
+    --bg: #f4f7fb;
+    --card: rgba(255, 255, 255, 0.94);
+    --text: #172033;
+    --muted: #64748b;
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --border: #dbe4f0;
+    --soft: #eef4ff;
+    --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+    --radius: 18px;
+  }
 
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Senha">
+  * {
+    box-sizing: border-box;
+  }
 
-<br><br>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Segoe UI, Tahoma, sans-serif;
+    color: var(--text);
+    background:
+      radial-gradient(circle at 10% 10%, rgba(37, 99, 235, 0.16), transparent 42%),
+      radial-gradient(circle at 90% 20%, rgba(14, 165, 233, 0.12), transparent 45%),
+      var(--bg);
+    display: grid;
+    place-items: center;
+    padding: 24px;
+  }
 
-<button onclick="login()">Entrar</button>
-<button onclick="register()">Cadastrar</button>
+  .login-card {
+    width: min(100%, 420px);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(8px);
+    padding: 26px;
+    display: grid;
+    gap: 14px;
+  }
+
+  .brand {
+    width: fit-content;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--primary);
+    background: var(--soft);
+    border: 1px solid #cfe0ff;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1.45rem;
+    line-height: 1.2;
+  }
+
+  .subtitle {
+    margin: -6px 0 2px;
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+
+  .fields {
+    display: grid;
+    gap: 12px;
+  }
+
+  input {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 0.95rem;
+    outline: none;
+    background: #fff;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  input:focus {
+    border-color: rgba(37, 99, 235, 0.55);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+  }
+
+  .actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  button {
+    border-radius: 12px;
+    padding: 11px 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  }
+
+  .btn-primary {
+    border: 0;
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 12px 20px rgba(37, 99, 235, 0.2);
+  }
+
+  .btn-primary:hover {
+    background: var(--primary-hover);
+  }
+
+  .btn-secondary {
+    border: 1px solid #cfe0ff;
+    background: var(--soft);
+    color: var(--primary);
+  }
+
+  .btn-secondary:hover {
+    background: #e4eeff;
+  }
+
+  button:hover {
+    transform: translateY(-1px);
+  }
+
+  @media (max-width: 420px) {
+    .login-card {
+      padding: 18px;
+      border-radius: 16px;
+    }
+
+    .actions {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<section class="login-card">
+  <span class="brand">Mensageiro</span>
+  <h2>Login</h2>
+  <p class="subtitle">Entre na sua conta ou cadastre um novo usuario.</p>
+
+  <div class="fields">
+    <input id="email" placeholder="Email" />
+    <input id="password" type="password" placeholder="Senha" />
+  </div>
+
+  <div class="actions">
+    <button class="btn-primary" onclick="login()">Entrar</button>
+    <button class="btn-secondary" onclick="register()">Cadastrar</button>
+  </div>
+</section>
 
 <script>
 function login(){
@@ -46,7 +191,7 @@ function register(){
     .then(res => res.json().then(data => ({ ok: res.ok, data })))
     .then(({ ok, data }) => {
         if(ok){
-            alert("Usuário criado com sucesso!")
+            alert("Usuario criado com sucesso!")
 
             // limpa campos
             email.value = ""
