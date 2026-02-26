@@ -1,55 +1,276 @@
-<h2>Mensageiro</h2>
+﻿<style>
+  :root {
+    --bg: #f4f7fb;
+    --card: #ffffff;
+    --text: #172033;
+    --muted: #64748b;
+    --border: #dbe4f0;
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --soft: #eef4ff;
+    --shadow: 0 14px 38px rgba(15, 23, 42, 0.08);
+    --radius: 16px;
+  }
 
-<hr>
+  * {
+    box-sizing: border-box;
+  }
 
-<h3>Criar Template</h3>
+  body {
+    margin: 0;
+    font-family: Segoe UI, Tahoma, sans-serif;
+    color: var(--text);
+    background:
+      radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.14), transparent 40%),
+      radial-gradient(circle at 100% 10%, rgba(14, 165, 233, 0.12), transparent 42%),
+      var(--bg);
+    min-height: 100vh;
+    padding: 24px;
+  }
 
-<input id="title" placeholder="Título">
-<input id="subject" placeholder="Assunto">
-<br><br>
-<textarea id="body" placeholder="Corpo do email (ex: Olá {{nome}})"></textarea>
-<br>
+  .page {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
 
-<button onclick="createTemplate()">Salvar template</button>
-<button onclick="loadTemplates()">Atualizar templates</button>
+  .topbar {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    padding: 18px 20px;
+    margin-bottom: 20px;
+  }
 
-<hr>
+  .topbar h2 {
+    margin: 0;
+    font-size: 1.5rem;
+  }
 
-<h3>Meus templates</h3>
-<ul id="templatesList"></ul>
+  .topbar p {
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
 
-<hr>
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
 
-<h3>Enviar e-mail</h3>
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px;
+  }
 
-<label>Template:</label>
-<select id="templateSelect"></select>
+  .card.full {
+    grid-column: 1 / -1;
+  }
 
-<br><br>
+  h3 {
+    margin: 0 0 12px;
+    font-size: 1.05rem;
+  }
 
-<label>Para (usuário):</label>
-<select id="userSelect"></select>
+  .muted {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: -2px 0 12px;
+  }
 
-<br><br>
+  .form-grid {
+    display: grid;
+    gap: 10px;
+  }
 
-<label>Nome (para {{nome}}):</label>
-<input id="nomeVar" placeholder="Ex: Carlos">
+  .inline {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
 
-<br><br>
+  label {
+    font-size: 0.9rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
 
-<button onclick="sendEmail()">Enviar</button>
+  input,
+  select,
+  textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    background: #fff;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
 
-<hr>
+  textarea {
+    min-height: 130px;
+    resize: vertical;
+    line-height: 1.4;
+  }
 
-<h3>Histórico (enviados/recebidos)</h3>
-<button onclick="loadEmails()">Atualizar histórico</button>
-<ul id="emailsList"></ul>
+  input:focus,
+  select:focus,
+  textarea:focus {
+    border-color: rgba(37, 99, 235, 0.55);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+  }
 
-<hr>
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 6px;
+  }
 
-<h3>Caixa de entrada (recebidos)</h3>
-<button onclick="loadInbox()">Atualizar caixa de entrada</button>
-<ul id="inboxList"></ul>
+  button {
+    border: 0;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+    background: var(--soft);
+    color: var(--primary);
+    border: 1px solid #cfe0ff;
+  }
+
+  button:hover {
+    transform: translateY(-1px);
+    background: #e4eeff;
+  }
+
+  .actions button:first-child,
+  .primary {
+    background: var(--primary);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 10px 18px rgba(37, 99, 235, 0.18);
+  }
+
+  .actions button:first-child:hover,
+  .primary:hover {
+    background: var(--primary-hover);
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+  }
+
+  li {
+    border: 1px solid var(--border);
+    background: #fbfdff;
+    border-radius: 12px;
+    padding: 11px 12px;
+    line-height: 1.35;
+    word-break: break-word;
+  }
+
+  hr {
+    display: none;
+  }
+
+  @media (max-width: 900px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+
+    .inline {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 560px) {
+    body {
+      padding: 14px;
+    }
+
+    .topbar,
+    .card {
+      border-radius: 14px;
+      padding: 14px;
+    }
+  }
+</style>
+
+<div class="page">
+  <header class="topbar">
+    <h2>Mensageiro</h2>
+    <p>Painel para criar templates e enviar mensagens internas.</p>
+  </header>
+
+  <main class="grid">
+    <section class="card">
+      <h3>Criar template</h3>
+      <p class="muted">Monte um modelo reutilizavel para envio rapido.</p>
+      <div class="form-grid">
+        <div class="inline">
+          <input id="title" placeholder="Titulo" />
+          <input id="subject" placeholder="Assunto" />
+        </div>
+        <textarea id="body" placeholder="Corpo do email (ex: Ola {% raw %}{{nome}}{% endraw %}). Use {% raw %}{{nome}}{% endraw %} para puxar o nome."></textarea>
+        <div class="actions">
+          <button onclick="createTemplate()">Salvar template</button>
+          <button onclick="loadTemplates()">Atualizar templates</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Enviar e-mail</h3>
+      <p class="muted">Selecione o template, destinatario e variaveis.</p>
+      <div class="form-grid">
+        <label for="templateSelect">Template</label>
+        <select id="templateSelect"></select>
+
+        <label for="userSelect">Para (usuario)</label>
+        <select id="userSelect"></select>
+
+        <label for="nomeVar">Nome (para {{nome}})</label>
+        <input id="nomeVar" placeholder="Ex: Carlos" />
+
+        <div class="actions">
+          <button class="primary" onclick="sendEmail()">Enviar</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card full">
+      <h3>Meus templates</h3>
+      <ul id="templatesList"></ul>
+    </section>
+
+    <section class="card">
+      <div class="actions" style="margin-top:0; margin-bottom:10px;">
+        <button onclick="loadEmails()">Atualizar historico</button>
+      </div>
+      <h3>Historico (enviados/recebidos)</h3>
+      <ul id="emailsList"></ul>
+    </section>
+
+    <section class="card">
+      <div class="actions" style="margin-top:0; margin-bottom:10px;">
+        <button onclick="loadInbox()">Atualizar caixa de entrada</button>
+      </div>
+      <h3>Caixa de entrada (recebidos)</h3>
+      <ul id="inboxList"></ul>
+    </section>
+  </main>
+</div>
 
 <script>
 const token = localStorage.getItem("token");
@@ -66,7 +287,7 @@ function authHeaders(){
 }
 
 function getUserIdFromToken(){
-  // pega o payload do JWT e lê o "sub"
+  // pega o payload do JWT e le o "sub"
   const payload = JSON.parse(atob(token.split('.')[1]));
   return parseInt(payload.sub);
 }
@@ -103,7 +324,7 @@ function fillTemplateSelect(templates){
   templates.forEach(t => {
     const opt = document.createElement("option");
     opt.value = t.id;
-    opt.textContent = `#${t.id} - ${t.title}`;
+    opt.textContent = `${t.title}`;
     templateSelect.appendChild(opt);
   });
 }
@@ -121,7 +342,7 @@ function loadTemplates(){
 
       data.forEach(t => {
         const li = document.createElement("li");
-        li.textContent = `#${t.id} - ${t.title} | ${t.subject}`;
+        li.textContent = `${t.title} | ${t.subject}`;
         templatesList.appendChild(li);
       });
 
@@ -134,7 +355,7 @@ function loadUsers(){
     .then(res => res.json().then(data => ({ ok: res.ok, data })))
     .then(({ ok, data }) => {
       if(!ok){
-        alert(data.msg || "Erro ao listar usuários");
+        alert(data.msg || "Erro ao listar usuarios");
         return;
       }
 
@@ -142,7 +363,7 @@ function loadUsers(){
       data.forEach(u => {
         const opt = document.createElement("option");
         opt.value = u.id;
-        opt.textContent = `${u.email} (id ${u.id})`;
+        opt.textContent = `${u.email}`;
         userSelect.appendChild(opt);
       });
     });
@@ -154,7 +375,7 @@ function sendEmail(){
     return;
   }
   if(!userSelect.value){
-    alert("Cadastre outro usuário para enviar.");
+    alert("Cadastre outro usuario para enviar.");
     return;
   }
 
@@ -174,7 +395,7 @@ function sendEmail(){
       nomeVar.value = "";
 
       loadEmails();
-      loadInbox(); // atualiza a caixa de entrada também
+      loadInbox(); // atualiza a caixa de entrada tambem
     }else{
       alert(data.msg || "Erro ao enviar");
     }
@@ -186,7 +407,7 @@ function loadEmails(){
     .then(res => res.json().then(data => ({ ok: res.ok, data })))
     .then(({ ok, data }) => {
       if(!ok){
-        alert(data.msg || "Erro ao carregar histórico");
+        alert(data.msg || "Erro ao carregar historico");
         return;
       }
 
@@ -194,7 +415,7 @@ function loadEmails(){
 
       data.forEach(e => {
         const li = document.createElement("li");
-        li.textContent = `#${e.id} | de ${e.sender_id} para ${e.receiver_id} | ${e.subject} | ${e.created_at}`;
+        li.textContent = `ID ${e.id} | de ${e.sender_id} para ${e.receiver_id} | ${e.subject} | ${e.created_at}`;
         emailsList.appendChild(li);
       });
     });
@@ -239,3 +460,5 @@ loadTemplates();
 loadEmails();
 loadInbox();
 </script>
+
+
